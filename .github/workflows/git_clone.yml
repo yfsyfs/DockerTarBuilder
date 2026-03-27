@@ -10,7 +10,7 @@ on:
       branch:
         description: '分支名'
         required: true
-        default: 'main'
+        default: 'master'
         type: string
 
 jobs:
