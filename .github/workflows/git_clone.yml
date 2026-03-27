@@ -1,0 +1,35 @@
+name: Package Git Repository (Artifact)
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_url:
+        description: 'Git 仓库地址'
+        required: true
+        type: string
+      branch:
+        description: '分支名'
+        required: true
+        default: 'main'
+        type: string
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 克隆目标仓库
+        run: |
+          REPO_NAME=$(echo "${{ github.event.inputs.repo_url }}" | sed 's/.*\/\(.*\)\.git/\1/')
+          git clone --depth 1 --branch ${{ github.event.inputs.branch }} \
+            ${{ github.event.inputs.repo_url }} $REPO_NAME
+          cd $REPO_NAME && rm -rf .git && cd ..
+          tar -czf "${REPO_NAME}.tar.gz" $REPO_NAME
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+      
+      - name: 上传到 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.REPO_NAME }}-${{ github.event.inputs.branch }}
+          path: ${{ env.REPO_NAME }}.tar.gz
+          retention-days: 7  # 保留 7 天
